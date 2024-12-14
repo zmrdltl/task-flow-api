@@ -1,0 +1,22 @@
+#!/bin/sh
+# .husky/prepare-commit-msg
+
+BRANCH_NAME=$(git symbolic-ref --short HEAD)
+PREFIX=$(echo "$BRANCH_NAME" | cut -d'-' -f1)
+
+# Define valid prefixes
+VALID_PREFIXES="feature fix chore docs refactor"
+
+if echo "$VALID_PREFIXES" | grep -w "$PREFIX" > /dev/null; then
+  # If prefix is valid, prepend it to the commit message
+  echo "$PREFIX:" > "$1"
+fi
+
+# Get the Signed-off-by line
+SOB=$(git var GIT_AUTHOR_IDENT | sed -n 's/^\(.*>\).*$/Signed-off-by: \1/p')
+
+# Append Signed-off-by line if it's not already in the commit message
+if ! grep -qs "^Signed-off-by: " "$1"; then
+  echo "" >> "$1" # Ensure a newline before appending
+  echo "$SOB" >> "$1"
+fi
