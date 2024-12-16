@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "프로젝트 관리 웹 사이트 API",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
