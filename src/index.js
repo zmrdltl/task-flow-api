@@ -1,10 +1,11 @@
-const express = require('express');
-const { ApolloServer } = require('apollo-server-express');
-const dotenv = require('dotenv');
-const connectDB = require('./config/db');
-const typeDefs = require('./graphql/schema');
-const projectResolver = require('./graphql/resolvers/resolver');
-const { express: voyagerMiddleware } = require('graphql-voyager/middleware');
+import express from 'express';
+import { ApolloServer } from 'apollo-server-express';
+import dotenv from 'dotenv';
+import connectDB from './config/db.js';
+import typeDefs from './graphql/schema/index.js';
+import resolver from './graphql/resolvers/index.js';
+import { express as voyagerMiddleware } from 'graphql-voyager/middleware/index.js';
+
 
 dotenv.config(); // .env 파일 로드
 connectDB(); // MongoDB 연결
@@ -16,33 +17,12 @@ app.use('/voyager', voyagerMiddleware({ endpointUrl: '/graphql' }));
 
 const server = new ApolloServer({
   typeDefs,
-  resolvers: projectResolver,
+  resolvers: resolver,
 });
 
 async function startServer() {
   await server.start();
   server.applyMiddleware({ app });
-
-  // REST 엔드포인트 추가
-  app.get('/projects', async (req, res) => {
-    try {
-      const result = await server.executeOperation({
-        query: `
-          query {
-            getProjects {
-              id
-              name
-              description
-              createdAt
-            }
-          }
-        `,
-      });
-      res.json(result.data.getProjects);
-    } catch (error) {
-      res.status(500).send({ error: error.message });
-    }
-  });
 
   const PORT = process.env.PORT || 4000;
   app.listen(PORT, () => {
