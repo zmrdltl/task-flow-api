@@ -62,12 +62,28 @@ const typeDefs = gql`
   type Mutation {
     # Member Mutations
     createMember(email: String!, nickname: String!, isActive: Boolean): Member
-    updateMember(id: ID!, email: String, nickname: String, isActive: Boolean): Member
+    updateMember(
+      id: ID!
+      email: String
+      nickname: String
+      isActive: Boolean
+    ): Member
     deleteMember(id: ID!): Member
 
     # Project Mutations
-    createProject(name: String!, description: String, members: [ID]): Project
-    updateProject(id: ID!, name: String, description: String, members: [ID]): Project
+    createProject(
+      name: String!
+      description: String
+      members: [ID]
+      endDate: String
+    ): Project
+    updateProject(
+      id: ID!
+      name: String
+      description: String
+      members: [ID]
+      endDate: String
+    ): Project
     deleteProject(id: ID!): Project
 
     # Task Mutations
