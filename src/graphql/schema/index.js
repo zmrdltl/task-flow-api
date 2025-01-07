@@ -3,6 +3,7 @@ import { gql } from 'apollo-server-express';
 const typeDefs = gql`
   type Member {
     id: ID!
+    projectId: ID!
     email: String!
     nickname: String!
     isActive: Boolean!
@@ -49,6 +50,7 @@ const typeDefs = gql`
     # Member Queries
     getMembers: [Member]
     getMemberById(id: ID!): Member
+    getMembersByProject(projectId: ID!): [Member]
 
     # Project Queries
     getProjects: [Project]
@@ -61,7 +63,12 @@ const typeDefs = gql`
 
   type Mutation {
     # Member Mutations
-    createMember(email: String!, nickname: String!, isActive: Boolean): Member
+    createMember(
+      email: String!
+      nickname: String!
+      isActive: Boolean
+      projectId: ID!
+    ): Member
     updateMember(
       id: ID!
       email: String
