@@ -74,23 +74,36 @@ const memberResolver = {
     },
     updateMember: async (_, { id, email, nickname, isActive }) => {
       try {
-        const member = await Member.findByIdAndUpdate(
+        const member = await Member.findById(id);
+        if (!member) throw new Error('Member not found');
+
+        // ✅ Member 정보 업데이트
+        const updatedMember = await Member.findByIdAndUpdate(
           id,
           { email, nickname, isActive },
           { new: true }
         );
-        if (!member) throw new Error('Member not found');
-        return member;
+
+        return updatedMember;
       } catch (err) {
+        console.error('❌ Failed to update member:', err.message);
         throw new Error('Failed to update member');
       }
     },
     deleteMember: async (_, { id }) => {
       try {
-        const member = await Member.findByIdAndDelete(id);
+        const member = await Member.findById(id);
         if (!member) throw new Error('Member not found');
+
+        // ✅ Project에서 해당 멤버 삭제
+        await Project.updateMany({ members: id }, { $pull: { members: id } });
+
+        // ✅ Member 삭제
+        await Member.findByIdAndDelete(id);
+
         return member;
       } catch (err) {
+        console.error('❌ Failed to delete member:', err.message);
         throw new Error('Failed to delete member');
       }
     },
