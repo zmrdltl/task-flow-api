@@ -14,7 +14,11 @@ const projectResolver = {
       try {
         const project = await Project.findById(id)
           .populate('members')
-          .populate('tasks');
+          .populate({
+            path: 'tasks',
+            populate: [{ path: 'managers' }, { path: 'subTasks' }],
+          });
+
         if (!project) throw new Error('Project not found');
         return project;
       } catch (err) {

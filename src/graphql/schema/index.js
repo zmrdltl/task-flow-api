@@ -23,6 +23,17 @@ const typeDefs = gql`
     priority: Boolean
   }
 
+  type SubTaskResponse {
+    id: ID!
+    name: String!
+    description: String
+    status: String!
+    priority: Boolean
+    progress: Int
+    managers: [Member]
+    subTasks: [Task]
+  }
+
   type Project {
     id: ID!
     name: String!
@@ -119,6 +130,8 @@ const typeDefs = gql`
     ): Task
 
     deleteTask(id: ID!): Task
+
+    createSubTask(parentTaskId: ID!, task: TaskInput!): SubTaskResponse
   }
 `;
 
