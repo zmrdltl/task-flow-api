@@ -166,6 +166,41 @@ const taskResolver = {
         throw new Error('Failed to delete task');
       }
     },
+    createSubTask: async (_, { parentTaskId, task }) => {
+      try {
+        // parentTaskId 유효성 검사
+        if (!mongoose.Types.ObjectId.isValid(parentTaskId)) {
+          throw new Error(`Invalid parentTaskId: ${parentTaskId}`);
+        }
+
+        const parentTask = await Task.findById(parentTaskId);
+        if (!parentTask) {
+          throw new Error(`Parent task with ID ${parentTaskId} not found`);
+        }
+
+        // SubTask 생성
+        const subTask = new Task({
+          projectId: parentTask.projectId,
+          ...task,
+        });
+
+        await subTask.save();
+
+        // 부모 Task에 SubTask 추가
+        await Task.findByIdAndUpdate(
+          parentTaskId,
+          { $push: { subTasks: subTask._id } },
+          { new: true }
+        );
+
+        return await Task.findById(subTask._id)
+          .populate('managers')
+          .populate('subTasks');
+      } catch (err) {
+        console.error('❌ Error in createSubTask:', err.message);
+        throw new Error(`Failed to create subtask: ${err.message}`);
+      }
+    },
   },
 };
 
