@@ -132,6 +132,7 @@ const typeDefs = gql`
     deleteTask(id: ID!): Task
 
     createSubTask(parentTaskId: ID!, task: TaskInput!): SubTaskResponse
+    deleteSubTask(parentTaskId: ID!, subTaskId: ID!): Task
   }
 `;
 

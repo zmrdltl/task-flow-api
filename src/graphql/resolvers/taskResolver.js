@@ -201,6 +201,44 @@ const taskResolver = {
         throw new Error(`Failed to create subtask: ${err.message}`);
       }
     },
+    deleteSubTask: async (_, { parentTaskId, subTaskId }) => {
+      try {
+        // parentTaskId와 subTaskId 유효성 검사
+        if (
+          !mongoose.Types.ObjectId.isValid(parentTaskId) ||
+          !mongoose.Types.ObjectId.isValid(subTaskId)
+        ) {
+          throw new Error(`Invalid parentTaskId or subTaskId`);
+        }
+
+        // 부모 Task 찾기
+        const parentTask = await Task.findById(parentTaskId);
+        if (!parentTask) {
+          throw new Error(`Parent task with ID ${parentTaskId} not found`);
+        }
+
+        // SubTask 찾기
+        const subTask = await Task.findById(subTaskId);
+        if (!subTask) {
+          throw new Error(`SubTask with ID ${subTaskId} not found`);
+        }
+
+        // 부모 Task에서 SubTask 제거
+        await Task.findByIdAndUpdate(
+          parentTaskId,
+          { $pull: { subTasks: subTaskId } },
+          { new: true }
+        );
+
+        // SubTask 삭제
+        await Task.findByIdAndDelete(subTaskId);
+
+        return subTask;
+      } catch (err) {
+        console.error('❌ Error in deleteSubTask:', err.message);
+        throw new Error(`Failed to delete subtask: ${err.message}`);
+      }
+    },
   },
 };
 
