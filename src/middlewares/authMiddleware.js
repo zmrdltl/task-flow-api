@@ -1,18 +1,33 @@
-import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
+import dotenv from 'dotenv';
 
-export const authMiddleware = (context) => {
-  const authHeader = context.req.headers.authorization; // 요청 헤더에서 Authorization 가져오기
+dotenv.config();
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+export const authMiddleware = async ({ req }) => {
+  const authHeader = req.headers.authorization;
 
   if (!authHeader) {
     throw new Error('❌ 인증 토큰이 없습니다.');
   }
 
-  const token = authHeader.replace('Bearer ', ''); // "Bearer " 제거
+  const token = authHeader.replace('Bearer ', '');
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // JWT 검증
-    return decoded; // ✅ 검증된 사용자 정보 반환
+    console.log('🔍 Google ID Token 검증 시작');
+
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    console.log('✅ 검증 완료:', payload);
+
+    return payload; // ✅ Google 사용자 정보 반환
   } catch (error) {
+    console.error('❌ Google ID Token 검증 실패:', error.message);
     throw new Error('❌ 유효하지 않은 토큰입니다.');
   }
 };
