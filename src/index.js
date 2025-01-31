@@ -18,9 +18,22 @@ app.use('/voyager', voyagerMiddleware({ endpointUrl: '/graphql' }));
 const server = new ApolloServer({
   typeDefs,
   resolvers: resolver,
-  context: ({ req }) => {
-    const user = authMiddleware({ req }); // ✅ JWT 검증 후 user 정보 포함
-    return { user }; // ✅ 모든 Resolver에서 context.user로 접근 가능
+  context: async ({ req }) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+      throw new Error('❌ 인증 토큰이 없습니다.');
+    }
+
+    const token = authHeader.replace('Bearer ', ''); // "Bearer " 제거
+
+    try {
+      const user = await authMiddleware(token); // ✅ Google ID Token 검증
+      return { user }; // ✅ 모든 Resolver에서 context.user로 접근 가능
+    } catch (error) {
+      console.error('❌ 인증 실패:', error.message);
+      throw new Error('❌ 유효하지 않은 토큰입니다.');
+    }
   },
 });
 
