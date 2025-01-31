@@ -1,6 +1,11 @@
 import { gql } from 'apollo-server-express';
 
 const typeDefs = gql`
+  type AuthPayload {
+    accessToken: String!
+    member: Member!
+  }
+
   type Member {
     id: ID!
     projectId: ID!
@@ -73,6 +78,7 @@ const typeDefs = gql`
   }
 
   type Mutation {
+    googleLogin(idToken: String!): AuthPayload
     # Member Mutations
     createMember(
       email: String!
