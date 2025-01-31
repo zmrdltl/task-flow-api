@@ -3,14 +3,18 @@ import mongoose from 'mongoose';
 
 const memberResolver = {
   Query: {
-    getMembers: async () => {
+    getMembers: async (_, __, context) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+
       try {
         return await Member.find();
       } catch (err) {
         throw new Error('Failed to fetch members');
       }
     },
-    getMemberById: async (_, { id }) => {
+    getMemberById: async (_, { id }, context) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+
       try {
         const member = await Member.findById(id);
         if (!member) throw new Error('Member not found');
@@ -19,7 +23,9 @@ const memberResolver = {
         throw new Error('Failed to fetch member');
       }
     },
-    getMembersByProject: async (_, { projectId }) => {
+    getMembersByProject: async (_, { projectId }, context) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+
       try {
         if (!mongoose.Types.ObjectId.isValid(projectId)) {
           throw new Error(`Invalid projectId: ${projectId}`);
@@ -35,7 +41,13 @@ const memberResolver = {
     },
   },
   Mutation: {
-    createMember: async (_, { email, nickname, isActive, projectId }) => {
+    createMember: async (
+      _,
+      { email, nickname, isActive, projectId },
+      context
+    ) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+
       try {
         console.log('📌 Received Input:', {
           email,
@@ -72,7 +84,9 @@ const memberResolver = {
         throw new Error(`Failed to create member: ${err.message}`);
       }
     },
-    updateMember: async (_, { id, email, nickname, isActive }) => {
+    updateMember: async (_, { id, email, nickname, isActive }, context) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+
       try {
         const member = await Member.findById(id);
         if (!member) throw new Error('Member not found');
@@ -90,7 +104,9 @@ const memberResolver = {
         throw new Error('Failed to update member');
       }
     },
-    deleteMember: async (_, { id }) => {
+    deleteMember: async (_, { id }, context) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+
       try {
         const member = await Member.findById(id);
         if (!member) throw new Error('Member not found');

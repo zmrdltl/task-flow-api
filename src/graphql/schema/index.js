@@ -8,6 +8,7 @@ const typeDefs = gql`
 
   type Member {
     id: ID!
+    googleId: String
     projectId: ID!
     email: String!
     nickname: String!
