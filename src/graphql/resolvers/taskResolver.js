@@ -3,14 +3,16 @@ import { Project, Task } from '../../models/index.js';
 
 const taskResolver = {
   Query: {
-    getTasks: async () => {
+    getTasks: async (_, __, context) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
       try {
         return await Task.find().populate('managers').populate('subTasks');
       } catch (err) {
         throw new Error('Failed to fetch tasks');
       }
     },
-    getTaskById: async (_, { id }) => {
+    getTaskById: async (_, { id }, context) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
       try {
         const task = await Task.findById(id)
           .populate('managers')
@@ -35,8 +37,10 @@ const taskResolver = {
         endDate,
         progress,
         priority,
-      }
+      },
+      context
     ) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
       try {
         console.log('📌 Received Input:', {
           projectId,
@@ -117,8 +121,10 @@ const taskResolver = {
         endDate,
         progress,
         priority,
-      }
+      },
+      context
     ) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
       try {
         const managersObjectIds = managers
           ? managers.map((m) => {
@@ -151,7 +157,8 @@ const taskResolver = {
         throw new Error('Failed to update task');
       }
     },
-    deleteTask: async (_, { id }) => {
+    deleteTask: async (_, { id }, context) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
       try {
         const task = await Task.findById(id);
         if (!task) throw new Error('Task not found');
@@ -166,7 +173,8 @@ const taskResolver = {
         throw new Error('Failed to delete task');
       }
     },
-    createSubTask: async (_, { parentTaskId, task }) => {
+    createSubTask: async (_, { parentTaskId, task }, context) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
       try {
         // parentTaskId 유효성 검사
         if (!mongoose.Types.ObjectId.isValid(parentTaskId)) {
@@ -201,7 +209,8 @@ const taskResolver = {
         throw new Error(`Failed to create subtask: ${err.message}`);
       }
     },
-    deleteSubTask: async (_, { parentTaskId, subTaskId }) => {
+    deleteSubTask: async (_, { parentTaskId, subTaskId }, context) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
       try {
         // parentTaskId와 subTaskId 유효성 검사
         if (

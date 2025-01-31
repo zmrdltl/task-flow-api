@@ -3,14 +3,18 @@ import mongoose from 'mongoose';
 
 const projectResolver = {
   Query: {
-    getProjects: async () => {
+    getProjects: async (_, __, context) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+
       try {
         return await Project.find().populate('members').populate('tasks');
       } catch (err) {
         throw new Error('Failed to fetch projects');
       }
     },
-    getProjectById: async (_, { id }) => {
+    getProjectById: async (_, { id }, context) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+
       try {
         const project = await Project.findById(id)
           .populate('members')
@@ -27,7 +31,13 @@ const projectResolver = {
     },
   },
   Mutation: {
-    createProject: async (_, { name, description, members, endDate }) => {
+    createProject: async (
+      _,
+      { name, description, members, endDate },
+      context
+    ) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+
       try {
         const membersObjectIds = members
           ? members.map((m) => new mongoose.Types.ObjectId(m))
@@ -50,8 +60,11 @@ const projectResolver = {
     },
     updateProject: async (
       _,
-      { id, name, description, members, tasks, endDate }
+      { id, name, description, members, tasks, endDate },
+      context
     ) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+
       try {
         console.log('📌 Received Input:', {
           id,
@@ -82,7 +95,9 @@ const projectResolver = {
       }
     },
 
-    deleteProject: async (_, { id }) => {
+    deleteProject: async (_, { id }, context) => {
+      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+
       try {
         const project = await Project.findByIdAndDelete(id);
         if (!project) throw new Error('Project not found');

@@ -5,7 +5,7 @@ import connectDB from './config/db.js';
 import typeDefs from './graphql/schema/index.js';
 import resolver from './graphql/resolvers/index.js';
 import { express as voyagerMiddleware } from 'graphql-voyager/middleware/index.js';
-
+import { authMiddleware } from './middlewares/authMiddleware.js';
 
 dotenv.config(); // .env 파일 로드
 connectDB(); // MongoDB 연결
@@ -18,6 +18,10 @@ app.use('/voyager', voyagerMiddleware({ endpointUrl: '/graphql' }));
 const server = new ApolloServer({
   typeDefs,
   resolvers: resolver,
+  context: ({ req }) => {
+    const user = authMiddleware({ req }); // ✅ JWT 검증 후 user 정보 포함
+    return { user }; // ✅ 모든 Resolver에서 context.user로 접근 가능
+  },
 });
 
 async function startServer() {
@@ -26,8 +30,10 @@ async function startServer() {
 
   const PORT = process.env.PORT || 4000;
   app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}${server.graphqlPath}`);
-    console.log(`GraphQL Voyager: http://localhost:${PORT}/voyager`);
+    console.log(
+      `🚀 Server running at http://localhost:${PORT}${server.graphqlPath}`
+    );
+    console.log(`🔍 GraphQL Voyager: http://localhost:${PORT}/voyager`);
   });
 }
 

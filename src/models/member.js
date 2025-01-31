@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const memberSchema = new mongoose.Schema({
+  googleId: { type: String, unique: true },
   projectId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Project',
