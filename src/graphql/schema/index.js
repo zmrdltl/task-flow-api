@@ -1,11 +1,18 @@
 import { gql } from 'apollo-server-express';
 
 const typeDefs = gql`
+  type AuthPayload {
+    accessToken: String!
+    member: Member!
+  }
+
   type Member {
     id: ID!
+    googleId: String
     projectId: ID!
     email: String!
     nickname: String!
+    profileImage: String!
     isActive: Boolean!
   }
 
@@ -73,6 +80,7 @@ const typeDefs = gql`
   }
 
   type Mutation {
+    googleLogin(accessToken: String!): AuthPayload
     # Member Mutations
     createMember(
       email: String!
@@ -132,6 +140,7 @@ const typeDefs = gql`
     deleteTask(id: ID!): Task
 
     createSubTask(parentTaskId: ID!, task: TaskInput!): SubTaskResponse
+    deleteSubTask(parentTaskId: ID!, subTaskId: ID!): Task
   }
 `;
 

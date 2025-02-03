@@ -6,7 +6,6 @@ import typeDefs from './graphql/schema/index.js';
 import resolver from './graphql/resolvers/index.js';
 import { express as voyagerMiddleware } from 'graphql-voyager/middleware/index.js';
 
-
 dotenv.config(); // .env 파일 로드
 connectDB(); // MongoDB 연결
 
@@ -18,6 +17,7 @@ app.use('/voyager', voyagerMiddleware({ endpointUrl: '/graphql' }));
 const server = new ApolloServer({
   typeDefs,
   resolvers: resolver,
+  context: ({ req }) => ({ request: req }),
 });
 
 async function startServer() {
@@ -26,8 +26,10 @@ async function startServer() {
 
   const PORT = process.env.PORT || 4000;
   app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}${server.graphqlPath}`);
-    console.log(`GraphQL Voyager: http://localhost:${PORT}/voyager`);
+    console.log(
+      `🚀 Server running at http://localhost:${PORT}${server.graphqlPath}`
+    );
+    console.log(`🔍 GraphQL Voyager: http://localhost:${PORT}/voyager`);
   });
 }
 

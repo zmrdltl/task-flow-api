@@ -1,16 +1,21 @@
 import { Project } from '../../models/index.js';
 import mongoose from 'mongoose';
+import { authMiddleware } from '../../middlewares/authMiddleware.js';
 
 const projectResolver = {
   Query: {
-    getProjects: async () => {
+    getProjects: async (_, __, context) => {
+      await authMiddleware({ request: context.request });
+
       try {
         return await Project.find().populate('members').populate('tasks');
       } catch (err) {
         throw new Error('Failed to fetch projects');
       }
     },
-    getProjectById: async (_, { id }) => {
+    getProjectById: async (_, { id }, context) => {
+      await authMiddleware({ request: context.request });
+
       try {
         const project = await Project.findById(id)
           .populate('members')
@@ -27,7 +32,13 @@ const projectResolver = {
     },
   },
   Mutation: {
-    createProject: async (_, { name, description, members, endDate }) => {
+    createProject: async (
+      _,
+      { name, description, members, endDate },
+      context
+    ) => {
+      await authMiddleware({ request: context.request });
+
       try {
         const membersObjectIds = members
           ? members.map((m) => new mongoose.Types.ObjectId(m))
@@ -50,8 +61,11 @@ const projectResolver = {
     },
     updateProject: async (
       _,
-      { id, name, description, members, tasks, endDate }
+      { id, name, description, members, tasks, endDate },
+      context
     ) => {
+      await authMiddleware({ request: context.request });
+
       try {
         console.log('📌 Received Input:', {
           id,
@@ -82,7 +96,9 @@ const projectResolver = {
       }
     },
 
-    deleteProject: async (_, { id }) => {
+    deleteProject: async (_, { id }, context) => {
+      await authMiddleware({ request: context.request });
+
       try {
         const project = await Project.findByIdAndDelete(id);
         if (!project) throw new Error('Project not found');

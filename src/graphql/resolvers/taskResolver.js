@@ -3,14 +3,16 @@ import { Project, Task } from '../../models/index.js';
 
 const taskResolver = {
   Query: {
-    getTasks: async () => {
+    getTasks: async (_, __, context) => {
+      await authMiddleware({ request: context.request });
       try {
         return await Task.find().populate('managers').populate('subTasks');
       } catch (err) {
         throw new Error('Failed to fetch tasks');
       }
     },
-    getTaskById: async (_, { id }) => {
+    getTaskById: async (_, { id }, context) => {
+      await authMiddleware({ request: context.request });
       try {
         const task = await Task.findById(id)
           .populate('managers')
@@ -35,8 +37,10 @@ const taskResolver = {
         endDate,
         progress,
         priority,
-      }
+      },
+      context
     ) => {
+      await authMiddleware({ request: context.request });
       try {
         console.log('📌 Received Input:', {
           projectId,
@@ -117,8 +121,10 @@ const taskResolver = {
         endDate,
         progress,
         priority,
-      }
+      },
+      context
     ) => {
+      await authMiddleware({ request: context.request });
       try {
         const managersObjectIds = managers
           ? managers.map((m) => {
@@ -151,7 +157,8 @@ const taskResolver = {
         throw new Error('Failed to update task');
       }
     },
-    deleteTask: async (_, { id }) => {
+    deleteTask: async (_, { id }, context) => {
+      await authMiddleware({ request: context.request });
       try {
         const task = await Task.findById(id);
         if (!task) throw new Error('Task not found');
@@ -166,7 +173,8 @@ const taskResolver = {
         throw new Error('Failed to delete task');
       }
     },
-    createSubTask: async (_, { parentTaskId, task }) => {
+    createSubTask: async (_, { parentTaskId, task }, context) => {
+      await authMiddleware({ request: context.request });
       try {
         // parentTaskId 유효성 검사
         if (!mongoose.Types.ObjectId.isValid(parentTaskId)) {
@@ -199,6 +207,45 @@ const taskResolver = {
       } catch (err) {
         console.error('❌ Error in createSubTask:', err.message);
         throw new Error(`Failed to create subtask: ${err.message}`);
+      }
+    },
+    deleteSubTask: async (_, { parentTaskId, subTaskId }, context) => {
+      await authMiddleware({ request: context.request });
+      try {
+        // parentTaskId와 subTaskId 유효성 검사
+        if (
+          !mongoose.Types.ObjectId.isValid(parentTaskId) ||
+          !mongoose.Types.ObjectId.isValid(subTaskId)
+        ) {
+          throw new Error(`Invalid parentTaskId or subTaskId`);
+        }
+
+        // 부모 Task 찾기
+        const parentTask = await Task.findById(parentTaskId);
+        if (!parentTask) {
+          throw new Error(`Parent task with ID ${parentTaskId} not found`);
+        }
+
+        // SubTask 찾기
+        const subTask = await Task.findById(subTaskId);
+        if (!subTask) {
+          throw new Error(`SubTask with ID ${subTaskId} not found`);
+        }
+
+        // 부모 Task에서 SubTask 제거
+        await Task.findByIdAndUpdate(
+          parentTaskId,
+          { $pull: { subTasks: subTaskId } },
+          { new: true }
+        );
+
+        // SubTask 삭제
+        await Task.findByIdAndDelete(subTaskId);
+
+        return subTask;
+      } catch (err) {
+        console.error('❌ Error in deleteSubTask:', err.message);
+        throw new Error(`Failed to delete subtask: ${err.message}`);
       }
     },
   },

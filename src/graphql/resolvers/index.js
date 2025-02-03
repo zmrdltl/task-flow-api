@@ -1,6 +1,7 @@
 import projectResolver from './projectResolver.js';
 import memberResolver from './memberResolver.js';
 import taskResolver from './taskResolver.js';
+import authResolver from './authResolver.js';
 
 const resolvers = {
   Query: {
@@ -12,6 +13,7 @@ const resolvers = {
     ...projectResolver.Mutation,
     ...memberResolver.Mutation,
     ...taskResolver.Mutation,
+    ...authResolver.Mutation,
   },
 };
 

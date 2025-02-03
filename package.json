@@ -17,9 +17,11 @@
     "apollo-server-express": "^3.13.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "google-auth-library": "^9.15.1",
     "graphql": "^16.9.0",
     "graphql-http": "^1.22.3",
     "graphql-voyager": "^2.1.0",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.4"
   },
   "devDependencies": {
