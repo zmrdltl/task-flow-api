@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 const memberResolver = {
   Query: {
     getMembers: async (_, __, context) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
 
       try {
         return await Member.find();
@@ -13,7 +13,7 @@ const memberResolver = {
       }
     },
     getMemberById: async (_, { id }, context) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
 
       try {
         const member = await Member.findById(id);
@@ -24,7 +24,7 @@ const memberResolver = {
       }
     },
     getMembersByProject: async (_, { projectId }, context) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
 
       try {
         if (!mongoose.Types.ObjectId.isValid(projectId)) {
@@ -46,7 +46,7 @@ const memberResolver = {
       { email, nickname, isActive, projectId },
       context
     ) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
 
       try {
         console.log('📌 Received Input:', {
@@ -85,7 +85,7 @@ const memberResolver = {
       }
     },
     updateMember: async (_, { id, email, nickname, isActive }, context) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
 
       try {
         const member = await Member.findById(id);
@@ -105,7 +105,7 @@ const memberResolver = {
       }
     },
     deleteMember: async (_, { id }, context) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
 
       try {
         const member = await Member.findById(id);

@@ -1,10 +1,11 @@
 import { Project } from '../../models/index.js';
 import mongoose from 'mongoose';
+import { authMiddleware } from '../../middlewares/authMiddleware.js';
 
 const projectResolver = {
   Query: {
     getProjects: async (_, __, context) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
 
       try {
         return await Project.find().populate('members').populate('tasks');
@@ -13,7 +14,7 @@ const projectResolver = {
       }
     },
     getProjectById: async (_, { id }, context) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
 
       try {
         const project = await Project.findById(id)
@@ -36,7 +37,7 @@ const projectResolver = {
       { name, description, members, endDate },
       context
     ) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
 
       try {
         const membersObjectIds = members
@@ -63,7 +64,7 @@ const projectResolver = {
       { id, name, description, members, tasks, endDate },
       context
     ) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
 
       try {
         console.log('📌 Received Input:', {
@@ -96,7 +97,7 @@ const projectResolver = {
     },
 
     deleteProject: async (_, { id }, context) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
 
       try {
         const project = await Project.findByIdAndDelete(id);

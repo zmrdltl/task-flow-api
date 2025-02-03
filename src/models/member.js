@@ -5,11 +5,12 @@ const memberSchema = new mongoose.Schema({
   projectId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Project',
-    required: true,
+    required: false,
   },
   email: { type: String, required: true },
   nickname: { type: String, required: true },
   isActive: { type: Boolean, default: true },
+  profileImage: { type: String },
 });
 
 const Member = mongoose.model('Member', memberSchema);

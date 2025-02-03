@@ -4,7 +4,8 @@ import { Project, Task } from '../../models/index.js';
 const taskResolver = {
   Query: {
     getTasks: async (_, __, context) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
+
       try {
         return await Task.find().populate('managers').populate('subTasks');
       } catch (err) {
@@ -12,7 +13,7 @@ const taskResolver = {
       }
     },
     getTaskById: async (_, { id }, context) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
       try {
         const task = await Task.findById(id)
           .populate('managers')
@@ -40,7 +41,8 @@ const taskResolver = {
       },
       context
     ) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
+
       try {
         console.log('📌 Received Input:', {
           projectId,
@@ -124,7 +126,8 @@ const taskResolver = {
       },
       context
     ) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
+
       try {
         const managersObjectIds = managers
           ? managers.map((m) => {
@@ -158,7 +161,8 @@ const taskResolver = {
       }
     },
     deleteTask: async (_, { id }, context) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
+
       try {
         const task = await Task.findById(id);
         if (!task) throw new Error('Task not found');
@@ -174,7 +178,8 @@ const taskResolver = {
       }
     },
     createSubTask: async (_, { parentTaskId, task }, context) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
+
       try {
         // parentTaskId 유효성 검사
         if (!mongoose.Types.ObjectId.isValid(parentTaskId)) {
@@ -210,7 +215,8 @@ const taskResolver = {
       }
     },
     deleteSubTask: async (_, { parentTaskId, subTaskId }, context) => {
-      if (!context.user) throw new Error('❌ 인증이 필요합니다.');
+      await authMiddleware({ request: context.request });
+
       try {
         // parentTaskId와 subTaskId 유효성 검사
         if (
