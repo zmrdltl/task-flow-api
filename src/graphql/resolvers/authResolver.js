@@ -48,6 +48,7 @@ const authResolver = {
         }
 
         return { accessToken, member };
+
       } catch (error) {
         console.error('❌ Google 로그인 실패:', error.message);
         throw new Error('Google 로그인 실패: ' + error.message);

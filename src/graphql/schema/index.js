@@ -81,6 +81,7 @@ const typeDefs = gql`
 
   type Mutation {
     googleLogin(accessToken: String!): AuthPayload
+
     # Member Mutations
     createMember(
       email: String!

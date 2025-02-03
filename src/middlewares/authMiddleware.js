@@ -7,6 +7,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const authMiddleware = async ({ request }) => {
   const authHeader = request.headers.authorization;
+
   if (!authHeader) {
     throw new Error('❌ 인증 토큰이 없습니다.');
   }
