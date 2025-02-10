@@ -69,6 +69,7 @@ const typeDefs = gql`
     getMembers: [Member]
     getMemberById(id: ID!): Member
     getMembersByProject(projectId: ID!): [Member]
+    getMembersByEmail(email: String!): [Member]
 
     # Project Queries
     getProjects: [Project]

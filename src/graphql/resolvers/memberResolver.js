@@ -40,6 +40,16 @@ const memberResolver = {
         throw new Error(`Failed to get members: ${err.message}`);
       }
     },
+    getMembersByEmail: async (_, { email }, context) => {
+      await authMiddleware({ request: context.request });
+
+      try {
+        return await Member.find({ email });
+      } catch (err) {
+        console.error('❌ Failed to get members:', err.message);
+        throw new Error(`Failed to get members: ${err.message}`);
+      }
+    },
   },
   Mutation: {
     createMember: async (
