@@ -5,11 +5,18 @@ import connectDB from './config/db.js';
 import typeDefs from './graphql/schema/index.js';
 import resolver from './graphql/resolvers/index.js';
 import { express as voyagerMiddleware } from 'graphql-voyager/middleware/index.js';
+import cors from 'cors';
 
 dotenv.config(); // .env 파일 로드
 connectDB(); // MongoDB 연결
 
 const app = express();
+
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+  })
+);
 
 // Voyager 추가 (GraphQL 스키마 시각화)
 app.use('/voyager', voyagerMiddleware({ endpointUrl: '/graphql' }));
