@@ -11,6 +11,7 @@ const memberSchema = new mongoose.Schema({
   nickname: { type: String, required: true },
   isActive: { type: Boolean, default: true },
   profileImage: { type: String },
+  role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' },
 });
 
 const Member = mongoose.model('Member', memberSchema);

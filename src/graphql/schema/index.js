@@ -14,6 +14,7 @@ const typeDefs = gql`
     nickname: String!
     profileImage: String!
     isActive: Boolean!
+    role: Role
   }
 
   type Task {
@@ -28,6 +29,19 @@ const typeDefs = gql`
     progress: Int
     subTasks: [Task]
     priority: Boolean
+  }
+
+  type CreateRoleResponse {
+    member: Member!
+    role: Role!
+  }
+
+  type Role {
+    id: ID!
+    name: String!
+    permissions: [String]
+    projectId: ID!
+    memberId: ID!
   }
 
   type SubTaskResponse {
@@ -78,6 +92,11 @@ const typeDefs = gql`
     # Task Queries
     getTasks: [Task]
     getTaskById(id: ID!): Task
+
+    # Role Queries
+    getRoles: [Role]
+    getRoleById(id: ID!): Role
+    getRolesByProjectId(projectId: ID!): [Role]
   }
 
   type Mutation {
@@ -143,6 +162,28 @@ const typeDefs = gql`
 
     createSubTask(parentTaskId: ID!, task: TaskInput!): SubTaskResponse
     deleteSubTask(parentTaskId: ID!, subTaskId: ID!): Task
+
+    # Role Mutations
+    createRole(
+      name: String!
+      permissions: [String]
+      projectId: ID!
+      memberId: ID!
+    ): Role
+    createRoleByMemberEmail(
+      email: String!
+      projectId: ID!
+      name: String!
+      permissions: [String]
+    ): CreateRoleResponse!
+    updateRole(
+      id: ID!
+      name: String
+      permissions: [String]
+      projectId: ID!
+      memberId: ID!
+    ): Role
+    deleteRole(id: ID!): Role
   }
 `;
 
