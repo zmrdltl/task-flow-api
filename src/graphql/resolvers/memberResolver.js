@@ -8,7 +8,7 @@ const memberResolver = {
       await authMiddleware({ request: context.request });
 
       try {
-        return await Member.find();
+        return await Member.find().populate('role');
       } catch (err) {
         throw new Error('Failed to fetch members');
       }
@@ -17,7 +17,7 @@ const memberResolver = {
       await authMiddleware({ request: context.request });
 
       try {
-        const member = await Member.findById(id);
+        const member = await Member.findById(id).populate('role');
         if (!member) throw new Error('Member not found');
         return member;
       } catch (err) {
@@ -32,9 +32,7 @@ const memberResolver = {
           throw new Error(`Invalid projectId: ${projectId}`);
         }
 
-        return await Member.find({ projectId }).select(
-          '_id email nickname isActive'
-        );
+        return await Member.find({ projectId }).populate('role');
       } catch (err) {
         console.error('❌ Failed to get members:', err.message);
         throw new Error(`Failed to get members: ${err.message}`);
@@ -44,7 +42,7 @@ const memberResolver = {
       await authMiddleware({ request: context.request });
 
       try {
-        return await Member.find({ email });
+        return await Member.find({ email }).populate('role');
       } catch (err) {
         console.error('❌ Failed to get members:', err.message);
         throw new Error(`Failed to get members: ${err.message}`);
