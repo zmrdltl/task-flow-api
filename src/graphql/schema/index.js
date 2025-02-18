@@ -146,6 +146,8 @@ const typeDefs = gql`
     createMemberFromProject(
       projectId: ID!
       email: String!
+      name: String
+      permissions: [String]
     ): CreateMemberResponse
     removeMemberFromProject(projectId: ID!, memberId: ID!): ResponseMessage
 
