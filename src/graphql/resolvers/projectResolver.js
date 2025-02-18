@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { authMiddleware } from '../../middlewares/authMiddleware.js';
+import { Project, Member, Role } from '../../models/index.js';
 
 const projectResolver = {
   Query: {
@@ -167,11 +168,9 @@ const projectResolver = {
       await authMiddleware({ request: context.request });
 
       try {
-        // 프로젝트 존재 여부 확인
         const project = await Project.findById(projectId);
         if (!project) throw new Error(`Project with ID ${projectId} not found`);
 
-        // 이메일로 멤버 조회 (없으면 생성)
         let member = await Member.findOne({ email });
         if (!member) {
           member = new Member({
@@ -182,21 +181,13 @@ const projectResolver = {
           await member.save();
         }
 
-        // 프로젝트에 이미 추가된 멤버인지 확인
         if (project.members.includes(member._id)) {
           throw new Error(
             `Member with email ${email} is already in the project`
           );
         }
 
-        // 프로젝트에 멤버 추가
-        await Project.findByIdAndUpdate(
-          projectId,
-          { $addToSet: { members: member._id } }, // 중복 방지
-          { new: true }
-        );
-
-        // Role 생성 (기본적으로 MEMBER 권한 부여)
+        // Role 생성
         const role = new Role({
           name,
           permissions,
@@ -205,8 +196,21 @@ const projectResolver = {
         });
         await role.save();
 
+        // Member 객체에 Role 연결
+        member.role = role._id;
+        await member.save();
+
+        // 프로젝트에 멤버 추가
+        project.members.push(member._id);
+        await project.save();
+
+        // Member 객체를 role 정보와 함께 populate
+        const populatedMember = await Member.findById(member._id).populate(
+          'role'
+        );
+
         return {
-          member,
+          member: populatedMember,
           role,
           message: `Member ${email} added to project successfully`,
         };
