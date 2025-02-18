@@ -99,6 +99,16 @@ const typeDefs = gql`
     getRolesByProjectId(projectId: ID!): [Role]
   }
 
+  type CreateMemberResponse {
+    member: Member
+    role: Role
+    message: String
+  }
+
+  type ResponseMessage {
+    message: String
+  }
+
   type Mutation {
     googleLogin(accessToken: String!): AuthPayload
 
@@ -132,6 +142,12 @@ const typeDefs = gql`
       endDate: String
     ): Project
     deleteProject(id: ID!): Project
+
+    createMemberFromProject(
+      projectId: ID!
+      email: String!
+    ): CreateMemberResponse
+    removeMemberFromProject(projectId: ID!, memberId: ID!): ResponseMessage
 
     # Task Mutations
     createTask(

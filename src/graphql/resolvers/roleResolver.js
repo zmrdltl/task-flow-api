@@ -72,6 +72,13 @@ const roleResolver = {
 
         const createdRole = await Role.findById(role._id);
 
+        // project에 해당 member 추가
+        await Project.findByIdAndUpdate(
+          projectId,
+          { $addToSet: { members: member._id } }, // 중복 방지
+          { new: true }
+        );
+
         // member와 생성된 role 반환
         return {
           member,
