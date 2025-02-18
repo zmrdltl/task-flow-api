@@ -8,13 +8,15 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint": "eslint . --fix"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "apollo-server-express": "^3.13.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "google-auth-library": "^9.15.1",
@@ -25,6 +27,8 @@
     "mongoose": "^8.8.4"
   },
   "devDependencies": {
+    "eslint": "^9.20.1",
+    "eslint-plugin-import": "^2.31.0",
     "husky": "^9.1.7",
     "nodemon": "^3.1.7"
   }

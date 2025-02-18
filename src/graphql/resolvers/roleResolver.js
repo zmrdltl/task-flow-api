@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { Role, Member, Project } from '../../models/index.js';
 import { authMiddleware } from '../../middlewares/authMiddleware.js';
+import { Role, Member, Project } from '../../models/index.js';
 
 const roleResolver = {
   Query: {
