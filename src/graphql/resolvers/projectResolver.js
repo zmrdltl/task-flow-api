@@ -160,7 +160,11 @@ const projectResolver = {
       }
     },
 
-    createMemberFromProject: async (_, { projectId, email }, context) => {
+    createMemberFromProject: async (
+      _,
+      { projectId, email, name = 'MEMBER', permissions = ['READ_AND_COMMENT'] },
+      context
+    ) => {
       await authMiddleware({ request: context.request });
 
       try {
@@ -195,8 +199,8 @@ const projectResolver = {
 
         // Role 생성 (기본적으로 MEMBER 권한 부여)
         const role = new Role({
-          name: 'MEMBER',
-          permissions: ['READ_AND_COMMENT'],
+          name,
+          permissions,
           projectId: projectId,
           memberId: member._id,
         });

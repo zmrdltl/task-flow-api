@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Role, Member } from '../../models/index.js';
+import { Role, Member, Project } from '../../models/index.js';
 import { authMiddleware } from '../../middlewares/authMiddleware.js';
 
 const roleResolver = {
