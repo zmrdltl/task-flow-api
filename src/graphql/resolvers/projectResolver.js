@@ -159,6 +159,88 @@ const projectResolver = {
         throw new Error('Failed to delete project');
       }
     },
+
+    createMemberFromProject: async (_, { projectId, email }, context) => {
+      await authMiddleware({ request: context.request });
+
+      try {
+        // 프로젝트 존재 여부 확인
+        const project = await Project.findById(projectId);
+        if (!project) throw new Error(`Project with ID ${projectId} not found`);
+
+        // 이메일로 멤버 조회 (없으면 생성)
+        let member = await Member.findOne({ email });
+        if (!member) {
+          member = new Member({
+            email,
+            nickname: email.split('@')[0], // 기본 닉네임
+            isActive: true,
+          });
+          await member.save();
+        }
+
+        // 프로젝트에 이미 추가된 멤버인지 확인
+        if (project.members.includes(member._id)) {
+          throw new Error(
+            `Member with email ${email} is already in the project`
+          );
+        }
+
+        // 프로젝트에 멤버 추가
+        await Project.findByIdAndUpdate(
+          projectId,
+          { $addToSet: { members: member._id } }, // 중복 방지
+          { new: true }
+        );
+
+        // Role 생성 (기본적으로 MEMBER 권한 부여)
+        const role = new Role({
+          name: 'MEMBER',
+          permissions: ['READ_AND_COMMENT'],
+          projectId: projectId,
+          memberId: member._id,
+        });
+        await role.save();
+
+        return {
+          member,
+          role,
+          message: `Member ${email} added to project successfully`,
+        };
+      } catch (err) {
+        throw new Error(`Failed to add member to project: ${err.message}`);
+      }
+    },
+
+    removeMemberFromProject: async (_, { projectId, memberId }, context) => {
+      await authMiddleware({ request: context.request });
+
+      try {
+        // 프로젝트 존재 여부 확인
+        const project = await Project.findById(projectId);
+        if (!project) throw new Error(`Project with ID ${projectId} not found`);
+
+        // 멤버 존재 여부 확인
+        const member = await Member.findById(memberId);
+        if (!member) throw new Error(`Member with ID ${memberId} not found`);
+
+        // 프로젝트에서 멤버 제거
+        await Project.findByIdAndUpdate(
+          projectId,
+          { $pull: { members: memberId } }, // 멤버 제거
+          { new: true }
+        );
+
+        // 해당 멤버의 Role 제거 (프로젝트에 속한 Role 삭제)
+        await Role.deleteOne({ projectId: projectId, memberId: memberId });
+
+        return {
+          message: `Member ${member.email} removed from project successfully`,
+        };
+      } catch (err) {
+        throw new Error('Failed to remove member from project');
+      }
+    },
   },
 };
 
