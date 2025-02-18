@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { Project, Task } from '../../models/index.js';
 import { authMiddleware } from '../../middlewares/authMiddleware.js';
+import { Project, Task } from '../../models/index.js';
 
 const taskResolver = {
   Query: {

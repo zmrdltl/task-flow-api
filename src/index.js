@@ -1,11 +1,11 @@
-import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
-import dotenv from 'dotenv';
-import connectDB from './config/db.js';
-import typeDefs from './graphql/schema/index.js';
-import resolver from './graphql/resolvers/index.js';
-import { express as voyagerMiddleware } from 'graphql-voyager/middleware/index.js';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import express from 'express';
+import { express as voyagerMiddleware } from 'graphql-voyager/middleware/index.js';
+import connectDB from './config/db.js';
+import resolver from './graphql/resolvers/index.js';
+import typeDefs from './graphql/schema/index.js';
 
 dotenv.config(); // .env 파일 로드
 connectDB(); // MongoDB 연결

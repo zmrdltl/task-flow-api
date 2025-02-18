@@ -1,8 +1,8 @@
-import projectResolver from './projectResolver.js';
-import memberResolver from './memberResolver.js';
-import taskResolver from './taskResolver.js';
 import authResolver from './authResolver.js';
+import memberResolver from './memberResolver.js';
+import projectResolver from './projectResolver.js';
 import roleResolver from './roleResolver.js';
+import taskResolver from './taskResolver.js';
 
 const resolvers = {
   Query: {

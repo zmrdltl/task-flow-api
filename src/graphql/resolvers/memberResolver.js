@@ -1,6 +1,6 @@
-import { Project, Member } from '../../models/index.js';
 import mongoose from 'mongoose';
 import { authMiddleware } from '../../middlewares/authMiddleware.js';
+import { Project, Member } from '../../models/index.js';
 
 const memberResolver = {
   Query: {
