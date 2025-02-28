@@ -19,6 +19,7 @@ const taskSchema = new mongoose.Schema({
   progress: { type: Number, min: 0, max: 100 },
   subTasks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
   priority: { type: Boolean, default: false },
+  comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }],
 });
 
 const Task = mongoose.model('Task', taskSchema);
