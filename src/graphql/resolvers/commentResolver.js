@@ -1,24 +1,31 @@
 import mongoose from 'mongoose';
 import { authMiddleware } from '../../middlewares/authMiddleware.js';
 import { Comment, Member, Task, Project } from '../../models/index.js';
+import { getIsClicked, getLikeCount } from '../../utils/commentUtils.js';
 
 const commentResolver = {
   Query: {
     // 모든 댓글 조회 (회원, 태스크, 프로젝트 정보 populate)
     getComments: async (_, __, context) => {
       try {
-        await authMiddleware({ request: context.request });
+        const userData = await authMiddleware({ request: context.request });
+        const member = await Member.findOne({ email: userData.email });
 
         const comments = await Comment.find()
           .populate('memberId')
           .populate('taskId');
         if (!comments.length) return [];
-        return comments.map((comment) => ({
-          ...comment._doc,
-          id: comment._id.toString(),
-          member: comment.memberId,
-          task: comment.taskId,
-        }));
+
+        return await Promise.all(
+          comments.map(async (comment) => ({
+            ...comment._doc,
+            id: comment._id.toString(),
+            member: comment.memberId,
+            task: comment.taskId,
+            isClicked: await getIsClicked(comment._id, member._id),
+            likeCount: await getLikeCount(comment._id),
+          }))
+        );
       } catch (err) {
         console.error('❌ Error in getComments:', err.message);
         throw new Error('Failed to fetch comments: ' + err.message);
@@ -27,7 +34,9 @@ const commentResolver = {
 
     // 특정 댓글 조회
     getCommentById: async (_, { id }, context) => {
-      await authMiddleware({ request: context.request });
+      const userData = await authMiddleware({ request: context.request });
+      const member = await Member.findOne({ email: userData.email });
+
       try {
         const comment = await Comment.findById(id)
           .populate('memberId')
@@ -38,6 +47,8 @@ const commentResolver = {
           id: comment._id.toString(),
           member: comment.memberId,
           task: comment.taskId,
+          isClicked: await getIsClicked(comment._id, member._id),
+          likeCount: await getLikeCount(comment._id),
         };
       } catch (err) {
         throw new Error('Failed to fetch comment');
@@ -45,7 +56,9 @@ const commentResolver = {
     },
     // 태스크별 댓글 조회
     getCommentsByTask: async (_, { taskId }, context) => {
-      await authMiddleware({ request: context.request });
+      const userData = await authMiddleware({ request: context.request });
+      const member = await Member.findOne({ email: userData.email });
+
       try {
         if (!mongoose.Types.ObjectId.isValid(taskId)) {
           throw new Error(`Invalid taskId: ${taskId}`);
@@ -55,12 +68,16 @@ const commentResolver = {
           .populate('taskId');
         if (!comments.length) return [];
 
-        return comments.map((comment) => ({
-          ...comment._doc,
-          id: comment._id.toString(),
-          member: comment.memberId,
-          task: comment.taskId,
-        }));
+        return await Promise.all(
+          comments.map(async (comment) => ({
+            ...comment._doc,
+            id: comment._id.toString(),
+            member: comment.memberId,
+            task: comment.taskId,
+            isClicked: await getIsClicked(comment._id, member._id),
+            likeCount: await getLikeCount(comment._id),
+          }))
+        );
       } catch (err) {
         throw new Error('Failed to fetch comments by task');
       }
@@ -68,6 +85,7 @@ const commentResolver = {
     // 프로젝트별 댓글 조회
     getCommentsByProject: async (_, { projectId }, context) => {
       const userData = await authMiddleware({ request: context.request });
+      const member = await Member.findOne({ email: userData.email });
 
       try {
         if (!mongoose.Types.ObjectId.isValid(projectId)) {
@@ -77,12 +95,16 @@ const commentResolver = {
           .populate('memberId')
           .populate('taskId');
         if (!comments.length) return [];
-        return comments.map((comment) => ({
-          ...comment._doc,
-          id: comment._id.toString(),
-          member: comment.memberId,
-          task: comment.taskId,
-        }));
+        return await Promise.all(
+          comments.map(async (comment) => ({
+            ...comment._doc,
+            id: comment._id.toString(),
+            member: comment.memberId,
+            task: comment.taskId,
+            isClicked: await getIsClicked(comment._id, member._id),
+            likeCount: await getLikeCount(comment._id),
+          }))
+        );
       } catch (err) {
         throw new Error('Failed to fetch comments by project');
       }
@@ -132,6 +154,8 @@ const commentResolver = {
           id: savedComment._id.toString(),
           member: savedComment.memberId,
           task: savedComment.taskId,
+          isClicked: await getIsClicked(savedComment._id, member._id),
+          likeCount: await getLikeCount(savedComment._id),
         };
       } catch (err) {
         throw new Error(`Failed to create comment: ${err.message}`);
@@ -157,6 +181,8 @@ const commentResolver = {
           id: comment._id.toString(),
           member: comment.memberId,
           task: comment.taskId,
+          isClicked: await getIsClicked(comment._id, member._id),
+          likeCount: await getLikeCount(comment._id),
         };
       } catch (err) {
         throw new Error(`Failed to update comment: ${err.message}`);
@@ -180,6 +206,8 @@ const commentResolver = {
           id: comment._id.toString(),
           member: comment.memberId,
           task: comment.taskId,
+          isClicked: await getIsClicked(comment._id, member._id),
+          likeCount: await getLikeCount(comment._id),
         };
       } catch (err) {
         throw new Error(`Failed to delete comment: ${err.message}`);
