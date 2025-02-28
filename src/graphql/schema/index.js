@@ -44,6 +44,25 @@ const typeDefs = gql`
     memberId: ID!
   }
 
+  type Comment {
+    id: ID!
+    member: Member
+    content: String!
+    task: Task
+    projectId: ID
+    likeCount: Int
+    isClicked: Boolean
+    createdAt: String
+    updatedAt: String
+    expiredAt: String
+  }
+
+  type Like {
+    id: ID!
+    comment: Comment
+    member: Member
+  }
+
   type SubTaskResponse {
     id: ID!
     name: String!
@@ -97,6 +116,16 @@ const typeDefs = gql`
     getRoles: [Role]
     getRoleById(id: ID!): Role
     getRolesByProjectId(projectId: ID!): [Role]
+
+    # Comment Queries
+    getComments: [Comment]
+    getCommentById(id: ID!): Comment
+    getCommentsByTask(taskId: ID!): [Comment]
+    getCommentsByProject(projectId: ID!): [Comment]
+
+    # Like Queries
+    getLikes: [Like]
+    getLikesByComment(commentId: ID!): [Like]
   }
 
   type CreateMemberResponse {
@@ -202,6 +231,15 @@ const typeDefs = gql`
       memberId: ID!
     ): Role
     deleteRole(id: ID!): Role
+
+    # Comment Mutations
+    createComment(content: String!, taskId: ID, projectId: ID): Comment
+    updateComment(id: ID!, content: String!): Comment
+    deleteComment(id: ID!): Comment
+
+    # Like Mutations
+    createLike(commentId: ID!): Like
+    deleteLike(commentId: ID!): Like
   }
 `;
 
