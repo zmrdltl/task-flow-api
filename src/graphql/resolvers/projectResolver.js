@@ -1,25 +1,78 @@
 import mongoose from 'mongoose';
 import { authMiddleware } from '../../middlewares/authMiddleware.js';
-import { Project, Member, Role } from '../../models/index.js';
-
+import { Project, Member, Role, Comment } from '../../models/index.js';
+import { getIsClicked, getLikeCount } from '../../utils/commentUtils.js';
 const projectResolver = {
   Query: {
     getProjects: async (_, __, context) => {
-      await authMiddleware({ request: context.request });
-
       try {
-        return await Project.find()
+        const userData = await authMiddleware({ request: context.request });
+        const member = await Member.findOne({ email: userData.email });
+
+        const projects = await Project.find()
           .populate({
             path: 'members',
             populate: { path: 'role' },
           })
-          .populate('tasks');
+          .populate({
+            path: 'tasks',
+            populate: [
+              { path: 'managers' },
+              {
+                path: 'subTasks',
+                populate: [
+                  { path: 'managers' },
+                  {
+                    path: 'comments',
+                    populate: [{ path: 'memberId' }],
+                  },
+                ],
+              },
+              {
+                path: 'comments',
+                populate: [{ path: 'memberId' }],
+              },
+            ],
+          });
+
+        const response = await Promise.all(
+          projects.map((project) => ({
+            ...project._doc,
+            id: project._id.toString(),
+            tasks: project.tasks.map((task) => ({
+              ...task._doc,
+              id: task._id.toString(),
+              comments: task.comments.map(async (comment) => ({
+                ...comment._doc,
+                id: comment._id.toString(),
+                member: comment.memberId, // ✅ `memberId`를 `member`로 변환
+                isClicked: await getIsClicked(comment._id, member._id),
+                likeCount: await getLikeCount(comment._id),
+              })),
+              subTasks: task.subTasks.map((subTask) => ({
+                ...subTask._doc,
+                id: subTask._id.toString(),
+                comments: subTask.comments.map(async (comment) => ({
+                  ...comment._doc,
+                  id: comment._id.toString(),
+                  member: comment.memberId, // ✅ `memberId`를 `member`로 변환
+                  isClicked: await getIsClicked(comment._id, member._id),
+                  likeCount: await getLikeCount(comment._id),
+                })),
+              })),
+            })),
+          }))
+        );
+
+        console.log('📌 최종 Projects:', JSON.stringify(response, null, 2));
+        return response;
       } catch (err) {
         throw new Error('Failed to fetch projects');
       }
     },
     getProjectById: async (_, { id }, context) => {
-      await authMiddleware({ request: context.request });
+      const userData = await authMiddleware({ request: context.request });
+      const member = await Member.findOne({ email: userData.email });
 
       try {
         const project = await Project.findById(id)
@@ -29,11 +82,54 @@ const projectResolver = {
           })
           .populate({
             path: 'tasks',
-            populate: [{ path: 'managers' }, { path: 'subTasks' }],
+            populate: [
+              { path: 'managers' },
+              {
+                path: 'subTasks',
+                populate: [
+                  { path: 'managers' },
+                  {
+                    path: 'comments',
+                    populate: [{ path: 'memberId' }],
+                  },
+                ],
+              },
+              {
+                path: 'comments',
+                populate: [{ path: 'memberId' }],
+              },
+            ],
           });
 
-        if (!project) throw new Error('Project not found');
-        return project;
+        if (!project) throw new Error('Project no{t found');
+        const response = {
+          ...project._doc,
+          id: project._id.toString(),
+          tasks: project.tasks.map((task) => ({
+            ...task._doc,
+            id: task._id.toString(),
+            comments: task.comments.map(async (comment) => ({
+              ...comment._doc,
+              id: comment._id.toString(),
+              member: comment.memberId, // ✅ `memberId`를 `member`로 변환
+              isClicked: await getIsClicked(comment._id, member._id),
+              likeCount: await getLikeCount(comment._id),
+            })),
+            subTasks: task.subTasks.map((subTask) => ({
+              ...subTask._doc,
+              id: subTask._id.toString(),
+              comments: subTask.comments.map(async (comment) => ({
+                ...comment._doc,
+                id: comment._id.toString(),
+                member: comment.memberId, // ✅ `memberId`를 `member`로 변환
+                isClicked: await getIsClicked(comment._id, member._id),
+                likeCount: await getLikeCount(comment._id),
+              })),
+            })),
+          })),
+        };
+
+        return response;
       } catch (err) {
         throw new Error('Failed to fetch project');
       }

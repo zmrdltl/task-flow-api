@@ -145,6 +145,15 @@ const commentResolver = {
 
         await newComment.save();
 
+        // ✅ Task 또는 SubTask에도 댓글 추가
+        if (taskId) {
+          await Task.findByIdAndUpdate(
+            taskId,
+            { $push: { comments: newComment._id } },
+            { new: true }
+          );
+        }
+
         const savedComment = await Comment.findById(newComment._id)
           .populate('memberId')
           .populate('taskId');
@@ -164,7 +173,9 @@ const commentResolver = {
 
     // 댓글 수정 (내용 업데이트)
     updateComment: async (_, { id, content }, context) => {
-      await authMiddleware({ request: context.request });
+      const userData = await authMiddleware({ request: context.request });
+      const member = await Member.findOne({ email: userData.email });
+
       try {
         const comment = await Comment.findByIdAndUpdate(
           id,
@@ -176,6 +187,7 @@ const commentResolver = {
           .populate('taskId');
 
         if (!comment) throw new Error('Comment not found');
+
         return {
           ...comment._doc,
           id: comment._id.toString(),
@@ -190,7 +202,9 @@ const commentResolver = {
     },
     // 댓글 삭제
     deleteComment: async (_, { id }, context) => {
-      await authMiddleware({ request: context.request });
+      const userData = await authMiddleware({ request: context.request });
+      const member = await Member.findOne({ email: userData.email });
+
       try {
         const comment = await Comment.findByIdAndUpdate(
           id,
@@ -201,6 +215,13 @@ const commentResolver = {
           .populate('taskId');
 
         if (!comment) throw new Error('Comment not found');
+
+        await Task.findByIdAndUpdate(
+          comment.taskId,
+          { $pull: { comments: id } },
+          { new: true }
+        );
+
         return {
           ...comment._doc,
           id: comment._id.toString(),

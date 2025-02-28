@@ -29,6 +29,7 @@ const typeDefs = gql`
     progress: Int
     subTasks: [Task]
     priority: Boolean
+    comments: [Comment]
   }
 
   type CreateRoleResponse {
