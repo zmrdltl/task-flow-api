@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { authMiddleware } from '../../middlewares/authMiddleware.js';
-import { Project, Task } from '../../models/index.js';
+import { Project, Task, Member } from '../../models/index.js';
 
 const taskResolver = {
   Query: {
@@ -253,6 +253,74 @@ const taskResolver = {
       } catch (err) {
         console.error('❌ Error in deleteSubTask:', err.message);
         throw new Error(`Failed to delete subtask: ${err.message}`);
+      }
+    },
+    addMemberToTask: async (_, { taskId, memberId }, context) => {
+      await authMiddleware({ request: context.request });
+
+      try {
+        // 유효한 ID인지 확인
+        if (
+          !mongoose.Types.ObjectId.isValid(taskId) ||
+          !mongoose.Types.ObjectId.isValid(memberId)
+        ) {
+          throw new Error('Invalid taskId or memberId');
+        }
+
+        // Task 확인
+        const task = await Task.findById(taskId);
+        if (!task) throw new Error('Task not found');
+
+        // Member 확인
+        const member = await Member.findById(memberId);
+        if (!member) throw new Error('Member not found');
+
+        // 이미 멤버가 추가되어 있는지 확인
+        if (task.managers.includes(memberId)) {
+          throw new Error('Member is already assigned to this task');
+        }
+
+        // 멤버 추가
+        task.managers.push(memberId);
+        await task.save();
+
+        return await Task.findById(taskId)
+          .populate('managers')
+          .populate('subTasks');
+      } catch (err) {
+        throw new Error(`Failed to add member to task: ${err.message}`);
+      }
+    },
+    removeMemberFromTask: async (_, { taskId, memberId }, context) => {
+      await authMiddleware({ request: context.request });
+
+      try {
+        if (
+          !mongoose.Types.ObjectId.isValid(taskId) ||
+          !mongoose.Types.ObjectId.isValid(memberId)
+        ) {
+          throw new Error('Invalid taskId or memberId');
+        }
+
+        const task = await Task.findById(taskId);
+        if (!task) throw new Error('Task not found');
+
+        // 멤버가 존재하는지 확인
+        if (!task.managers.includes(memberId)) {
+          throw new Error('Member is not assigned to this task');
+        }
+
+        // 멤버 삭제
+        task.managers = task.managers.filter(
+          (id) => id.toString() !== memberId
+        );
+        await task.save();
+
+        return await Task.findById(taskId)
+          .populate('managers')
+          .populate('subTasks');
+      } catch (err) {
+        throw new Error(`Failed to remove member from task: ${err.message}`);
       }
     },
   },
