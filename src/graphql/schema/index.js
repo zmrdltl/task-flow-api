@@ -210,6 +210,16 @@ const typeDefs = gql`
     createSubTask(parentTaskId: ID!, task: TaskInput!): SubTaskResponse
     deleteSubTask(parentTaskId: ID!, subTaskId: ID!): Task
 
+    """
+    특정 Task에 멤버를 추가합니다.
+    """
+    addMemberToTask(taskId: ID!, memberId: ID!): Task
+
+    """
+    특정 Task에서 멤버를 제거합니다.
+    """
+    removeMemberFromTask(taskId: ID!, memberId: ID!): Task
+
     # Role Mutations
     createRole(
       name: String!
