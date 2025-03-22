@@ -101,32 +101,41 @@ const projectResolver = {
             ],
           });
 
-        if (!project) throw new Error('Project no{t found');
+        if (!project) throw new Error('Project not found');
+
         const response = {
           ...project._doc,
           id: project._id.toString(),
-          tasks: project.tasks.map((task) => ({
-            ...task._doc,
-            id: task._id.toString(),
-            comments: task.comments.map(async (comment) => ({
-              ...comment._doc,
-              id: comment._id.toString(),
-              member: comment.memberId, // ✅ `memberId`를 `member`로 변환
-              isClicked: await getIsClicked(comment._id, member._id),
-              likeCount: await getLikeCount(comment._id),
-            })),
-            subTasks: task.subTasks.map((subTask) => ({
-              ...subTask._doc,
-              id: subTask._id.toString(),
-              comments: subTask.comments.map(async (comment) => ({
-                ...comment._doc,
-                id: comment._id.toString(),
-                member: comment.memberId, // ✅ `memberId`를 `member`로 변환
-                isClicked: await getIsClicked(comment._id, member._id),
-                likeCount: await getLikeCount(comment._id),
-              })),
-            })),
-          })),
+          tasks: await Promise.all(
+            project.tasks.map(async (task) => ({
+              ...task._doc,
+              id: task._id.toString(),
+              comments: await Promise.all(
+                task.comments.map(async (comment) => ({
+                  ...comment._doc,
+                  id: comment._id.toString(),
+                  member: comment.memberId,
+                  isClicked: await getIsClicked(comment._id, member._id),
+                  likeCount: await getLikeCount(comment._id),
+                }))
+              ),
+              subTasks: await Promise.all(
+                task.subTasks.map(async (subTask) => ({
+                  ...subTask._doc,
+                  id: subTask._id.toString(),
+                  comments: await Promise.all(
+                    subTask.comments.map(async (comment) => ({
+                      ...comment._doc,
+                      id: comment._id.toString(),
+                      member: comment.memberId,
+                      isClicked: await getIsClicked(comment._id, member._id),
+                      likeCount: await getLikeCount(comment._id),
+                    }))
+                  ),
+                }))
+              ),
+            }))
+          ),
         };
 
         return response;
