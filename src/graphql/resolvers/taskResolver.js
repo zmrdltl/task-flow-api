@@ -159,22 +159,13 @@ const taskResolver = {
       await authMiddleware({ request: context.request });
 
       try {
-        const managersObjectIds = managers
-          ? managers.map((m) => {
-              if (!mongoose.Types.ObjectId.isValid(m)) {
-                throw new Error(`Invalid manager ID: ${m}`);
-              }
-              return new mongoose.Types.ObjectId(m);
-            })
-          : [];
-
         const task = await Task.findByIdAndUpdate(
           id,
           {
             name,
             description,
             status,
-            managers: managersObjectIds,
+            managers,
             startDate,
             endDate,
             progress,
