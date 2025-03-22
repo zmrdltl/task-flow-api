@@ -18,10 +18,39 @@ const taskResolver = {
       try {
         const task = await Task.findById(id)
           .populate('managers')
+          .populate({
+            path: 'comments',
+            populate: { path: 'memberId' },
+          })
           .populate('subTasks');
+
         if (!task) throw new Error('Task not found');
-        return task;
+
+        // ID 변환 및 필드 처리
+        const processedTask = {
+          ...task._doc,
+          id: task._id.toString(),
+          comments:
+            task.comments && task.comments.length > 0
+              ? task.comments.map((comment) => ({
+                  ...comment._doc,
+                  id: comment._id.toString(),
+                  member: comment.memberId,
+                  taskId: task._id.toString(),
+                }))
+              : [],
+          subTasks:
+            task.subTasks && task.subTasks.length > 0
+              ? task.subTasks.map((subTask) => ({
+                  ...subTask._doc,
+                  id: subTask._id.toString(),
+                }))
+              : [],
+        };
+
+        return processedTask;
       } catch (err) {
+        console.error('Error in getTaskById:', err);
         throw new Error('Failed to fetch task');
       }
     },

@@ -11,9 +11,7 @@ const commentResolver = {
         const userData = await authMiddleware({ request: context.request });
         const member = await Member.findOne({ email: userData.email });
 
-        const comments = await Comment.find()
-          .populate('memberId')
-          .populate('taskId');
+        const comments = await Comment.find().populate('memberId');
         if (!comments.length) return [];
 
         return await Promise.all(
@@ -21,7 +19,7 @@ const commentResolver = {
             ...comment._doc,
             id: comment._id.toString(),
             member: comment.memberId,
-            task: comment.taskId,
+            taskId: comment.taskId ? comment.taskId.toString() : null,
             isClicked: await getIsClicked(comment._id, member._id),
             likeCount: await getLikeCount(comment._id),
           }))
@@ -38,20 +36,19 @@ const commentResolver = {
       const member = await Member.findOne({ email: userData.email });
 
       try {
-        const comment = await Comment.findById(id)
-          .populate('memberId')
-          .populate('taskId');
+        const comment = await Comment.findById(id).populate('memberId');
         if (!comment) throw new Error('Comment not found');
         return {
           ...comment._doc,
           id: comment._id.toString(),
           member: comment.memberId,
-          task: comment.taskId,
+          taskId: comment.taskId ? comment.taskId.toString() : null,
           isClicked: await getIsClicked(comment._id, member._id),
           likeCount: await getLikeCount(comment._id),
         };
       } catch (err) {
-        throw new Error('Failed to fetch comment');
+        console.error('Error in getCommentById:', err);
+        throw new Error(`Failed to fetch comment: ${err.message}`);
       }
     },
     // 태스크별 댓글 조회
@@ -63,9 +60,14 @@ const commentResolver = {
         if (!mongoose.Types.ObjectId.isValid(taskId)) {
           throw new Error(`Invalid taskId: ${taskId}`);
         }
-        const comments = await Comment.find({ taskId })
-          .populate('memberId')
-          .populate('taskId');
+
+        const task = await Task.findById(taskId);
+        if (!task) {
+          throw new Error(`Task with ID ${taskId} not found`);
+        }
+
+        const comments = await Comment.find({ taskId }).populate('memberId');
+
         if (!comments.length) return [];
 
         return await Promise.all(
@@ -73,13 +75,14 @@ const commentResolver = {
             ...comment._doc,
             id: comment._id.toString(),
             member: comment.memberId,
-            task: comment.taskId,
+            taskId: taskId, // 직접 요청받은 taskId 사용
             isClicked: await getIsClicked(comment._id, member._id),
             likeCount: await getLikeCount(comment._id),
           }))
         );
       } catch (err) {
-        throw new Error('Failed to fetch comments by task');
+        console.error('Error in getCommentsByTask:', err);
+        throw new Error(`Failed to fetch comments by task: ${err.message}`);
       }
     },
     // 프로젝트별 댓글 조회
@@ -100,7 +103,7 @@ const commentResolver = {
             ...comment._doc,
             id: comment._id.toString(),
             member: comment.memberId,
-            task: comment.taskId,
+            taskId: comment.taskId ? comment.taskId.toString() : null,
             isClicked: await getIsClicked(comment._id, member._id),
             likeCount: await getLikeCount(comment._id),
           }))
@@ -154,19 +157,20 @@ const commentResolver = {
           );
         }
 
-        const savedComment = await Comment.findById(newComment._id)
-          .populate('memberId')
-          .populate('taskId');
+        const savedComment = await Comment.findById(newComment._id).populate(
+          'memberId'
+        );
 
         return {
           ...savedComment._doc,
           id: savedComment._id.toString(),
           member: savedComment.memberId,
-          task: savedComment.taskId,
+          taskId: taskId, // 직접 요청받은 taskId 사용
           isClicked: await getIsClicked(savedComment._id, member._id),
           likeCount: await getLikeCount(savedComment._id),
         };
       } catch (err) {
+        console.error('Error in createComment:', err);
         throw new Error(`Failed to create comment: ${err.message}`);
       }
     },
@@ -177,14 +181,18 @@ const commentResolver = {
       const member = await Member.findOne({ email: userData.email });
 
       try {
+        const commentToUpdate = await Comment.findById(id);
+        if (!commentToUpdate) throw new Error('Comment not found');
+
+        const taskId = commentToUpdate.taskId
+          ? commentToUpdate.taskId.toString()
+          : null;
+
         const comment = await Comment.findByIdAndUpdate(
           id,
           { content, updatedAt: new Date() },
-
           { new: true }
-        )
-          .populate('memberId')
-          .populate('taskId');
+        ).populate('memberId');
 
         if (!comment) throw new Error('Comment not found');
 
@@ -192,45 +200,56 @@ const commentResolver = {
           ...comment._doc,
           id: comment._id.toString(),
           member: comment.memberId,
-          task: comment.taskId,
+          taskId: taskId,
           isClicked: await getIsClicked(comment._id, member._id),
           likeCount: await getLikeCount(comment._id),
         };
       } catch (err) {
+        console.error('Error in updateComment:', err);
         throw new Error(`Failed to update comment: ${err.message}`);
       }
     },
+
     // 댓글 삭제
     deleteComment: async (_, { id }, context) => {
       const userData = await authMiddleware({ request: context.request });
       const member = await Member.findOne({ email: userData.email });
 
       try {
+        const commentToDelete = await Comment.findById(id);
+        if (!commentToDelete) throw new Error('Comment not found');
+
+        const taskId = commentToDelete.taskId
+          ? commentToDelete.taskId.toString()
+          : null;
+
         const comment = await Comment.findByIdAndUpdate(
           id,
           { expiredAt: new Date() }, // ✅ 삭제 시 `expiredAt`을 현재 timestamp로 설정
           { new: true }
-        )
-          .populate('memberId')
-          .populate('taskId');
+        ).populate('memberId');
 
         if (!comment) throw new Error('Comment not found');
 
-        await Task.findByIdAndUpdate(
-          comment.taskId,
-          { $pull: { comments: id } },
-          { new: true }
-        );
+        // 태스크에서 댓글 참조 제거
+        if (taskId) {
+          await Task.findByIdAndUpdate(
+            taskId,
+            { $pull: { comments: id } },
+            { new: true }
+          );
+        }
 
         return {
           ...comment._doc,
           id: comment._id.toString(),
           member: comment.memberId,
-          task: comment.taskId,
+          taskId: taskId,
           isClicked: await getIsClicked(comment._id, member._id),
           likeCount: await getLikeCount(comment._id),
         };
       } catch (err) {
+        console.error('Error in deleteComment:', err);
         throw new Error(`Failed to delete comment: ${err.message}`);
       }
     },

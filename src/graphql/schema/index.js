@@ -49,7 +49,7 @@ const typeDefs = gql`
     id: ID!
     member: Member
     content: String!
-    task: Task
+    taskId: ID
     projectId: ID
     likeCount: Int
     isClicked: Boolean
