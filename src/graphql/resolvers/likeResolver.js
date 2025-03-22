@@ -32,6 +32,9 @@ const likeResolver = {
                 ...like.commentId.toObject(),
                 id: like.commentId._id.toString(),
                 member: like.commentId.memberId,
+                taskId: like.commentId.taskId
+                  ? like.commentId.taskId.toString()
+                  : null,
                 likeCount,
                 isClicked,
               },
@@ -79,6 +82,9 @@ const likeResolver = {
                 ...like.commentId.toObject(),
                 id: like.commentId._id.toString(),
                 member: like.commentId.memberId,
+                taskId: like.commentId.taskId
+                  ? like.commentId.taskId.toString()
+                  : null,
                 likeCount,
                 isClicked,
               },
@@ -134,6 +140,9 @@ const likeResolver = {
             ...like.commentId.toObject(),
             id: like.commentId._id.toString(),
             member: like.commentId.memberId,
+            taskId: like.commentId.taskId
+              ? like.commentId.taskId.toString()
+              : null,
             likeCount,
             isClicked,
           },
@@ -174,7 +183,16 @@ const likeResolver = {
         return {
           ...like.toObject(),
           id: like._id.toString(),
-          comment: like.commentId,
+          comment: {
+            ...like.commentId.toObject(),
+            id: like.commentId._id.toString(),
+            member: like.commentId.memberId,
+            taskId: like.commentId.taskId
+              ? like.commentId.taskId.toString()
+              : null,
+            likeCount,
+            isClicked,
+          },
           member: like.memberId,
           likeCount,
           isClicked,

@@ -46,6 +46,7 @@ const projectResolver = {
                 ...comment._doc,
                 id: comment._id.toString(),
                 member: comment.memberId, // ✅ `memberId`를 `member`로 변환
+                taskId: comment.taskId ? comment.taskId.toString() : null,
                 isClicked: await getIsClicked(comment._id, member._id),
                 likeCount: await getLikeCount(comment._id),
               })),
@@ -56,6 +57,7 @@ const projectResolver = {
                   ...comment._doc,
                   id: comment._id.toString(),
                   member: comment.memberId, // ✅ `memberId`를 `member`로 변환
+                  taskId: comment.taskId ? comment.taskId.toString() : null,
                   isClicked: await getIsClicked(comment._id, member._id),
                   likeCount: await getLikeCount(comment._id),
                 })),
@@ -102,7 +104,7 @@ const projectResolver = {
           });
 
         if (!project) throw new Error('Project not found');
-
+        console.log('📌 project:', JSON.stringify(project, null, 2));
         const response = {
           ...project._doc,
           id: project._id.toString(),
@@ -115,6 +117,7 @@ const projectResolver = {
                   ...comment._doc,
                   id: comment._id.toString(),
                   member: comment.memberId,
+                  taskId: comment.taskId ? comment.taskId.toString() : null,
                   isClicked: await getIsClicked(comment._id, member._id),
                   likeCount: await getLikeCount(comment._id),
                 }))
@@ -128,6 +131,7 @@ const projectResolver = {
                       ...comment._doc,
                       id: comment._id.toString(),
                       member: comment.memberId,
+                      taskId: comment.taskId ? comment.taskId.toString() : null,
                       isClicked: await getIsClicked(comment._id, member._id),
                       likeCount: await getLikeCount(comment._id),
                     }))
