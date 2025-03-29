@@ -22,7 +22,13 @@ const taskResolver = {
             path: 'comments',
             populate: { path: 'memberId' },
           })
-          .populate('subTasks');
+          .populate({
+            path: 'subTasks',
+            populate: {
+              path: 'comments', // subTask 내의 comments도 populate
+              populate: { path: 'memberId' }, // comment의 memberId도 populate
+            },
+          });
 
         if (!task) throw new Error('Task not found');
 
@@ -44,6 +50,15 @@ const taskResolver = {
               ? task.subTasks.map((subTask) => ({
                   ...subTask._doc,
                   id: subTask._id.toString(),
+                  comments:
+                    subTask.comments && subTask.comments.length > 0
+                      ? subTask.comments.map((comment) => ({
+                          ...comment._doc,
+                          id: comment._id.toString(),
+                          member: comment.memberId,
+                          taskId: subTask._id.toString(),
+                        }))
+                      : [],
                 }))
               : [],
         };
