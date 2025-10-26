@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { authMiddleware } from '../../middlewares/authMiddleware.js';
-import { Project, Member, Role, Task, Comment } from '../../models/index.js';
+import { Project, Member, Role, Comment, Task } from '../../models/index.js';
 import { getIsClicked, getLikeCount } from '../../utils/commentUtils.js';
 const projectResolver = {
   Query: {
@@ -265,7 +265,7 @@ const projectResolver = {
         await Role.deleteMany({ projectId: project._id });
         return project;
       } catch (err) {
-        throw new Error('Failed to delete project');
+        throw new Error(`Failed to delete project: ${err.message}`);
       }
     },
 
