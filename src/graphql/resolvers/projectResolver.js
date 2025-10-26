@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { authMiddleware } from '../../middlewares/authMiddleware.js';
-import { Project, Member, Role, Comment } from '../../models/index.js';
+import { Project, Member, Role, Task, Comment } from '../../models/index.js';
 import { getIsClicked, getLikeCount } from '../../utils/commentUtils.js';
 const projectResolver = {
   Query: {
@@ -332,23 +332,33 @@ const projectResolver = {
       await authMiddleware({ request: context.request });
 
       try {
-        // 프로젝트 존재 여부 확인
         const project = await Project.findById(projectId);
         if (!project) throw new Error(`Project with ID ${projectId} not found`);
 
-        // 멤버 존재 여부 확인
         const member = await Member.findById(memberId);
         if (!member) throw new Error(`Member with ID ${memberId} not found`);
 
-        // 프로젝트에서 멤버 제거
+        // 1. 프로젝트에서 멤버 제거
         await Project.findByIdAndUpdate(
           projectId,
-          { $pull: { members: memberId } }, // 멤버 제거
+          { $pull: { members: memberId } },
           { new: true }
         );
 
-        // 해당 멤버의 Role 제거 (프로젝트에 속한 Role 삭제)
+        // 2. 해당 멤버의 Role 제거
         await Role.deleteOne({ projectId: projectId, memberId: memberId });
+
+        // 3. 모든 Task에서 해당 멤버를 managers에서 제거 (배열 업데이트)
+        await Task.updateMany(
+          { projectId, managers: memberId }, // 프로젝트와 해당 멤버가 managers에 포함된 문서 찾기
+          { $pull: { managers: memberId } } // 해당 멤버 제거
+        );
+
+        // 4. 모든 SubTask에서 해당 멤버를 managers에서 제거 (배열 업데이트)
+        await Task.updateMany(
+          { 'subTasks.managers': memberId }, // 하위 Task에 해당 멤버가 managers에 포함된 경우
+          { $pull: { 'subTasks.managers': memberId } } // 하위 Task에서 해당 멤버 제거
+        );
 
         return {
           message: `Member ${member.email} removed from project successfully`,

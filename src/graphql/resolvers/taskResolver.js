@@ -351,9 +351,19 @@ const taskResolver = {
         );
         await task.save();
 
+        // 4. 하위 작업 업데이트 (bulk operation)
+        await Task.updateMany(
+          { _id: { $in: task.subTasks } },
+          { $pull: { managers: memberId } }
+        );
+
+        // 5. 업데이트된 데이터 반환
         return await Task.findById(taskId)
           .populate('managers')
-          .populate('subTasks');
+          .populate({
+            path: 'subTasks',
+            populate: { path: 'managers' },
+          });
       } catch (err) {
         throw new Error(`Failed to remove member from task: ${err.message}`);
       }
